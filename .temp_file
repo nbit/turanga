@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+from gi.repository import Gtk
+ 
+class HolaMundo:
+ def __init__(self):
+  gui = Gtk.Builder()
+  gui.add_from_file("Glade/hola.glade")
+  eventos = {"on_mesage": self.__mostrarMensaje,
+             "on_salir" : Gtk.main_quit,
+             }
+  gui.connect_signals(eventos)
+  self.Ventana = gui.get_object("window1")
+ 
+ def __mostrarMensaje(self, widget):
+  self.mensaje(self.Ventana, "Hola Mundo")
+ 
+ def mensaje(self, widget, mensaje):
+  dialogo = Gtk.MessageDialog(widget, 0, Gtk.MessageType.INFO, Gtk.ButtonsType.OK, mensaje)
+  dialogo.run()
+  dialogo.destroy()
+ 
+HolaMundo()
+Gtk.main()
