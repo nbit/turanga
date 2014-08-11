@@ -46,6 +46,9 @@ class TurangaFormatFile:
 		dt = TurangaTextCryp(self.filename + ".crg", self.key)
 		r = dt.decryp()
 		
+		if not r:
+		    return False
+		
 		tb = str()
 		b  = str()
 		content = str()
@@ -85,7 +88,7 @@ class TurangaFormatFile:
 				tbytecount = 0
 			    except:
 			      print "\033[0;36m [!] Error al procesar la llave, quiza la clave sea incorrecta.\033[0m"
-			      sys.exit()
+			      return False
 
 			tbytecount = tbytecount + 1
 		
@@ -135,6 +138,15 @@ class TurangaImageCryp:
 		return key
 		
 	def cryp(self):
+	  
+		if "png" in self.pathInput:
+		  print(" [*] I need convert png files :)")
+		  
+		  jpg = TurangaConvert(self.pathInput, ".bmp-temp", "png")
+		  jpg.convert()
+		  
+		  self.imageObject = Image.open(".bmp-temp.bmp")
+		  self.imagePixels = self.imageObject.load()
 	
 		self.turangafile = TurangaFormatFile(self.pathOutput, self.key)
 	
@@ -198,6 +210,11 @@ class TurangaImageCryp:
 		print(" [i] Loading key file(\033[0;36m" + filename[0] + ".crg\033[0m) ...")
 		
 		self.internalkey     = self.turangafile.r()
+		
+		#Si hay error al procesar la llave retornamos
+		if not self.internalkey:
+		    return False
+
 		self.internalkeysize = len(self.internalkey)
 		
 		print(" [i] Working ... please wait")
@@ -229,6 +246,8 @@ class TurangaImageCryp:
 		
 		print ("\n\033[0;36m [*] Done! \033[0m")
 		print (" [i] " + str(byteCount) + " bytes decrypted in \033[0;36m" + self.pathOutput + ".png\033[0m\n")
+		
+		return True
 
 # ================================================================================ TuranagaImageCryp ends
 
@@ -396,7 +415,12 @@ class TurangaTextCryp:
 	
 	def cryp(self):
 		# Read fileo
-		readFile = open(self.pathFile)
+		try:
+                      readFile = open(self.pathFile)
+		except:
+                        print((" [!] El fichero no existe!"))
+                        return False
+
 		data = readFile.read()
 		# set the output file
 		#outputfile = open(self.pathOutput + ".crg", "wb")
@@ -432,7 +456,12 @@ class TurangaTextCryp:
 		
 	def decryp(self):
                 # reverse process to the previous
-                readFile = open(self.pathFile)
+                try:
+                    readFile = open(self.pathFile)
+                except:
+                    print((" [!] El fichero no existe!"))
+                    return False
+
                 data = readFile.read()
                 dataout = str()
 		
