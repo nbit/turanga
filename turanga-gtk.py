@@ -14,12 +14,13 @@ class GUI:
         }
         self.CIdata = {
             "OR_IMG_PATH": "",
-            "RE_IMG_PATH": ""
+            "RE_IMG_PATH": "",
+            "ACTION": ""
         }
 
         #Load xml
         self.gui = Gtk.Builder()
-        self.gui.add_from_file("gui/TRG-Gui.xml")
+        self.gui.add_from_file("/home/m4s73r/TURANGA/gui/TRG-Gui.xml")
 
         #Events
         events = {
@@ -33,6 +34,7 @@ class GUI:
             "on_save_ct_click": self.save_ct,
             "on_ci_open_click": self.open_image,
             "on_ci_click": self.crypt_img,
+            "on_di_click": self.decrypt_img,
             "on_ci_save_click": self.save_ci,
             "on_ct_destroy": self.HideCT,
             "on_ci_destroy": self.HideCI
@@ -132,6 +134,7 @@ class GUI:
         filter_text.add_mime_type("image/jpg")
         filter_text.add_mime_type("image/jpeg")
         filter_text.add_mime_type("image/bmp")
+        filter_text.add_mime_type("image/png")
         #invoke file chooser dialog and get path
         _file = self.open_file_dialog(widget, filter_text)
         if _file:
@@ -223,7 +226,7 @@ class GUI:
                 self.CTdata["TXT_REAL_CHARS"] = result
                 #create text buffer
                 text = Gtk.TextBuffer()
-                text.set_text(unicode(result, errors='replace'))
+                text.set_text(unicode(result, errors='replace'))  # lint:ok
                 #set result in textview
                 text_content.set_buffer(text)
 
@@ -234,6 +237,12 @@ class GUI:
             self.msg(self.CryptTextWindow, "Type any password!")
 
     def crypt_img(self, widget):
+        self.img_crypter("CRYPT")
+
+    def decrypt_img(self, widget):
+        self.img_crypter("DECRYPT")
+
+    def img_crypter(self, ACTION):
         txtpass_obj = self.gui.get_object("txt_CIPass")
         state = self.gui.get_object("lbl_CIState")
 
@@ -259,20 +268,37 @@ class GUI:
                     Gtk.main_iteration_do(False)
 
                 trg = TurangaImageCryp(imgpath, ".temp_ci_img", passw)
-                trg.cryp()
-                #change status to nothing
-                state.set_text("")
-                #set new img
-                imgres = self.gui.get_object("img_CIResult")
-                imgres.set_from_file(".temp_ci_img.png")
 
-                self.CIdata["RE_IMG_PATH"] = ".temp_ci_img"
+                if ACTION == "CRYPT":
+                    trg.cryp()
+                    done = True
+                else:
+                    done = trg.decryp()
+                    if not done:
+                        m = "Error al procesar la clave, quiza la contraseña"
+                        m += " sea incorrecta o el archivo de clave no existe."
+                        self.msg(self.CryptImageWindow, m)
+                        #change status to error
+                        state.set_markup(
+                            "<span color='red'>[!] Error</span>"
+                        )
+
+
+                if done:
+                    #change status to nothing
+                    state.set_text("")
+                    #set new img
+                    imgres = self.gui.get_object("img_CIResult")
+                    imgres.set_from_file(".temp_ci_img.png")
+
+                    self.CIdata["RE_IMG_PATH"] = ".temp_ci_img"
 
             else:
                 self.msg(self.CryptImageWindow, "Password?!")
 
         else:
             self.msg(self.CryptImageWindow, "Open any image!")
+
 
     def InvokeCT(self, widget):
         #Get crypt text window and show
